@@ -147,10 +147,18 @@ class SessionStore {
     }
 
     write() {
+        const data = JSON.stringify(this.data, null, 2);
+        const tempPath = `${this.filePath}.tmp_${process.pid}_${Date.now()}`;
         try {
-            fs.writeFileSync(this.filePath, JSON.stringify(this.data, null, 2), 'utf8');
+            fs.writeFileSync(tempPath, data, 'utf8');
+            fs.renameSync(tempPath, this.filePath);
         } catch (err) {
-            Terminal.warning("storage", `failed to save state: ${err.message}`);
+            try {
+                fs.writeFileSync(this.filePath, data, 'utf8');
+                if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+            } catch (fallbackErr) {
+                Terminal.warning("storage", `failed to save state: ${fallbackErr.message}`);
+            }
         }
     }
 
@@ -453,6 +461,8 @@ class TelemetryTransmission {
         const sessionId = crypto.randomUUID();
         const now = Date.now();
         const startTime = durationMs > now ? now : now - durationMs;
+        const jitter = Math.floor(Math.random() * (680 - 120 + 1)) + 120;
+        const launchTime = Math.min(startTime + jitter, now);
         const fingerprint = this.store.get('fingerprint');
 
         const initialHeartbeat = {
@@ -479,7 +489,7 @@ class TelemetryTransmission {
         };
 
         const launchProperties = {
-            client_track_timestamp: now,
+            client_track_timestamp: launchTime,
             client_heartbeat_session_id: this.heartbeatSessionId,
             event_sequence_number: ++this.sequenceIndex,
             game: game.title,
@@ -514,7 +524,7 @@ class TelemetryTransmission {
             launch_signature: this.launchSignature,
             client_rtc_state: null,
             client_app_state: "focused",
-            client_send_timestamp: now,
+            client_send_timestamp: launchTime,
         };
 
         if (fingerprint) {
@@ -574,6 +584,7 @@ class TelemetryTransmission {
             "X-Discord-Locale": "en-GB",
             "X-Discord-Timezone": "Europe/Oslo",
             "X-Super-Properties": this.encodedSuperProps,
+            "Connection": "keep-alive",
         };
 
         try {
@@ -583,9 +594,17 @@ class TelemetryTransmission {
                 body: payload,
                 signal: AbortSignal.timeout(15000),
             });
-            return resp.status;
+
+            let retryAfter = 0;
+            const headerRetry = resp.headers.get("retry-after");
+            if (headerRetry) {
+                const parsed = parseFloat(headerRetry);
+                retryAfter = !isNaN(parsed) && parsed > 0 ? parsed : 2.0;
+            }
+
+            return { status: resp.status, retryAfter };
         } catch {
-            return 0;
+            return { status: 0, retryAfter: 0 };
         }
     }
 }
@@ -734,15 +753,34 @@ class Orchestrator {
                 events.push(...this.transmission.createSessionPayload(item, durationMs));
             }
 
-            const status = await this.transmission.sendEventBatch(events);
-            if (status === 204) {
-                successful += chunk.length;
-                Terminal.progress(successful, total, `${successful}/${total} games transmitted`);
-            } else if (status === 401 || status === 403) {
-                Terminal.failure("auth", `rejected (HTTP ${status}) · please update your cf_clearance cookie via option 3`);
-                break;
-            } else {
-                Terminal.warning("telemetry", `unexpected response HTTP ${status}`);
+            let maxRetries = 3;
+            let batchSuccess = false;
+
+            while (maxRetries > 0) {
+                const { status, retryAfter } = await this.transmission.sendEventBatch(events);
+
+                if (status === 204) {
+                    successful += chunk.length;
+                    Terminal.progress(successful, total, `${successful}/${total} games transmitted`);
+                    batchSuccess = true;
+                    break;
+                } else if (status === 429) {
+                    const waitSec = Math.max(retryAfter, 2.0);
+                    Terminal.warning("rate-limit", `HTTP 429 hit · cooling down for ${waitSec.toFixed(1)}s (retries left: ${maxRetries - 1})...`);
+                    await wait(Math.round(waitSec * 1000));
+                    maxRetries--;
+                } else if (status === 401 || status === 403) {
+                    Terminal.failure("auth", `rejected (HTTP ${status}) · please update your cf_clearance cookie via option 3`);
+                    return;
+                } else {
+                    Terminal.warning("telemetry", `unexpected response HTTP ${status || 'network error'} (retries left: ${maxRetries - 1})`);
+                    await wait(1500);
+                    maxRetries--;
+                }
+            }
+
+            if (!batchSuccess) {
+                Terminal.failure("batch", `failed to transmit batch of ${chunk.length} games after retries`);
             }
 
             if (i + batchSize < total) {
@@ -765,9 +803,12 @@ class Orchestrator {
         let targetCount = this.catalog.length;
         if (countInput) {
             const parsed = parseInt(countInput, 10);
-            if (!isNaN(parsed) && parsed > 0) {
-                targetCount = Math.min(parsed, this.catalog.length);
+            if (isNaN(parsed) || parsed <= 0) {
+                Terminal.failure("input", "game count must be a positive number");
+                await wait(1200);
+                return;
             }
+            targetCount = Math.min(parsed, this.catalog.length);
         }
 
         const selectedGames = this.selectGameSlice(targetCount);
@@ -785,11 +826,27 @@ class Orchestrator {
     async actionBoostHours() {
         Terminal.notice("configure playtime hours booster");
         const hoursInput = await this.prompt(`  ${Terminal.C.slate}playtime hours per title? [50]:${Terminal.C.reset} `);
+        if (hoursInput) {
+            const parsed = parseFloat(hoursInput);
+            if (isNaN(parsed) || parsed <= 0) {
+                Terminal.failure("input", "hours must be a positive number");
+                await wait(1200);
+                return;
+            }
+        }
         const hours = hoursInput && !isNaN(parseFloat(hoursInput)) && parseFloat(hoursInput) > 0
             ? parseFloat(hoursInput)
             : 50.0;
 
         const countInput = await this.prompt(`  ${Terminal.C.slate}across how many titles? [10]:${Terminal.C.reset} `);
+        if (countInput) {
+            const parsed = parseInt(countInput, 10);
+            if (isNaN(parsed) || parsed <= 0) {
+                Terminal.failure("input", "number of titles must be a positive number");
+                await wait(1200);
+                return;
+            }
+        }
         const count = countInput && !isNaN(parseInt(countInput, 10)) && parseInt(countInput, 10) > 0
             ? Math.min(parseInt(countInput, 10), this.catalog.length)
             : Math.min(10, this.catalog.length);
