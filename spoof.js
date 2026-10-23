@@ -19,11 +19,11 @@ const CONFIG = {
         communityUrl: "https://discord.gg/remaders",
     },
     client: {
-        version: "1.0.9253",
-        buildNumber: 594031,
-        nativeBuild: 88414,
+        version: "1.0.9265",
+        buildNumber: 649389,
+        nativeBuild: 96160,
         osVersion: "10.0.26200",
-        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9253 Chrome/148.0.7778.280 Electron/42.7.1 Safari/537.36",
+        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9265 Chrome/148.0.7778.280 Electron/42.11.15 Safari/537.36",
     },
     network: {
         batchSize: 50,
