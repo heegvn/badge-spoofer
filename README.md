@@ -1,68 +1,30 @@
-# Discord Badge Spoofer & Profile Booster
+# discord-badge-spoofer
 
-An efficient, lightweight Node.js tool designed to safely send telemetry events to Discord's `/science` pipeline to inflate profile badges (Games Played count and Playtime Hours).
+inflates your discord profile badges - add hours played and mark games as played.
 
----
+## join https://discord.gg/remaders for support
 
-## Features
+**how it works:** discord's analytics endpoint (`/api/v9/science`) tracks what games you play and how long you play them. this tool posts the same events the real client does (`launch_game` and `running_game_heartbeat`), but with custom hours and game lists. discord accepts the events (`204`) and they do show up in your badges.
 
-- **Games Count Badge Booster**: Dispatches quick verified sessions to increment your total unique games played badge.
-- **Playtime Hours Badge Booster**: Injects accumulated playtime hours across your chosen games catalogue.
-- **Windows PE Authenticode Fingerprint**: Generates authentic executable signatures tied to your machine GUID and user ID.
-- **Zero External Dependencies**: Runs entirely on native Node.js APIs (`fetch`, `crypto`, `readline`, `child_process`).
-- ** State Persistence**: Caches sessions, authentication tokens, and claimed games in `science_state.json` (auto-ignored by git).
+**status:** verified working and currently unpatched. badges take 1-2 days to update, so don't expect results right away. your token and cookie are stored locally only - nothing leaves your machine. this may break at any time if discord patches the endpoint.
 
----
+**important:** this violates discord's tos. use it on accounts you're comfortable losing.
 
-## 📋 Requirements
+## setup
 
-- **Node.js** >= `18.0.0`
-- **Windows** (required only if generating hardware PE executable fingerprints)
+no external dependencies - pure native node.js (needs node 18+).
 
----
-
-## Quick Start
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/badge-spoofer.git
-   cd badge-spoofer
+1. run it:
    ```
-
-2. **Launch the tool:**
-   ```bash
    node spoof.js
    ```
-   *(or `npm start`)*
 
-3. **Follow the interactive CLI prompts:**
-   - Paste your Discord authorization token on first launch.
-   - Paste your `cf_clearance` cookie from your browser requests.
-   - Select option `1` (Games Count) or `2` (Playtime Hours).
+2. first run asks for your discord account token. paste it and it gets saved to `science_state.json` (reused after that). the analytics token is fetched automatically from `GET /users/@me?with_analytics_token=true`.
 
----
+3. you also need a cookie (`cf_clearance`). on startup it'll ask for one, or you can add/update it later via option `3` (refresh auth). grab the `cf_clearance` cookie from any request to discord in devtools (network tab). it gets saved to `science_state.json`.
 
-## How to Get Your Credentials
+4. select what you want to boost from the menu:
+   - `[1]` **boost games-played badge**: sends quick verified sessions to increment your total unique games played badge.
+   - `[2]` **boost playtime-hours badge**: injects custom accumulated playtime hours across your chosen games.
 
-### Discord Token
-1. Open Discord in your browser (or web client).
-2. Press `Ctrl + Shift + I` (Developer Tools) and open the **Network** tab.
-3. Perform any action (e.g. switch channels) and look for a request to `/api/`.
-4. Copy the value of the `Authorization` request header.
-
-### `cf_clearance` Cookie
-1. In the same **Network** tab, inspect requests sent to `discord.com`.
-2. Under **Request Headers**, look at the `Cookie` header.
-3. Copy the `cf_clearance=...` value.
-
----
-
-## ⚠️ Disclaimer
-
-This tool interacts with Discord's telemetry API. Use responsibly and at your own discretion. The developers are not responsible for any actions taken against your Discord account.
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
+5. **optional: hardware pe fingerprint for games-played count (option `4`).** on windows, discord validates executable signatures for certain telemetry checks. option `4` lets you provide any 64-bit game `.exe` path or running process pid to compute and bind an authentic authenticode signature.
