@@ -1,0 +1,23 @@
+{
+  "name": "discord-badge-spoofer",
+  "version": "1.0.0",
+  "description": "Fast and lightweight Discord profile badge and playtime telemetry booster",
+  "main": "spoof.js",
+  "bin": {
+    "badge-spoofer": "./spoof.js"
+  },
+  "scripts": {
+    "start": "node spoof.js"
+  },
+  "keywords": [
+    "discord",
+    "badges",
+    "telemetry",
+    "spoofer",
+    "profile-booster"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}
