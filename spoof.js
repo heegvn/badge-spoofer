@@ -10,7 +10,7 @@ const { stdin: input, stdout: output } = require('node:process');
 
 const CONFIG = {
     statePath: path.resolve(__dirname, 'science_state.json'),
-    gamesCachePath: path.resolve(__dirname, '..', 'data', 'games.json'),
+    gamesCachePath: path.resolve(__dirname, 'games.json'),
     endpoints: {
         analytics: "https://discord.com/api/v9/users/@me?with_analytics_token=true",
         science: "https://discord.com/api/v9/science",
