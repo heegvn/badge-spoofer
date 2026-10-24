@@ -57,68 +57,80 @@ function parseSnowflake(token) {
 }
 
 class Terminal {
+    static RED = "\x1b[91m";
+    static ORANGE = "\x1b[38;5;208m";
+    static GREEN = "\x1b[92m";
+    static YELLOW = "\x1b[93m";
+    static WHITE = "\x1b[97m";
+    static GREY = "\x1b[90m";
+    static RESET = "\x1b[0m";
+    static PINK = "\x1b[95m";
+    static RULE = "─".repeat(44);
+
     static C = {
         reset: "\x1b[0m",
-        bold: "\x1b[1m",
-        dim: "\x1b[2m",
-        cyan: "\x1b[38;5;51m",
-        blue: "\x1b[38;5;39m",
-        teal: "\x1b[38;5;43m",
-        emerald: "\x1b[38;5;48m",
-        amber: "\x1b[38;5;214m",
-        rose: "\x1b[38;5;204m",
-        slate: "\x1b[38;5;244m",
-        light: "\x1b[38;5;253m",
+        red: "\x1b[91m",
+        orange: "\x1b[38;5;208m",
+        green: "\x1b[92m",
+        yellow: "\x1b[93m",
+        white: "\x1b[97m",
+        pink: "\x1b[95m",
+        grey: "\x1b[90m",
+        slate: "\x1b[90m",
     };
+
+    static stamp() {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${this.GREY}${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}${this.RESET}`;
+    }
+
+    static line(glyph, target, detail, color) {
+        console.log(`  ${this.stamp()} ${glyph} ${this.WHITE}${target}${this.RESET} ${this.GREY}·${this.RESET} ${color}${detail}${this.RESET}`);
+    }
+
+    static ok(target, detail) {
+        this.line(`${this.GREEN}✓${this.RESET}`, target, detail, this.GREEN);
+    }
+    static success(target, detail) { this.ok(target, detail); }
+
+    static sent(target, detail) {
+        this.line(`${this.GREY}·${this.RESET} ${this.GREEN}sent${this.RESET}`, target, detail, this.GREEN);
+    }
+
+    static warn(target, detail) {
+        this.line(`${this.YELLOW}!${this.RESET}`, target, detail, this.YELLOW);
+    }
+    static warning(target, detail) { this.warn(target, detail); }
+
+    static err(target, detail) {
+        this.line(`${this.RED}✗${this.RESET}`, target, detail, this.RED);
+    }
+    static failure(target, detail) { this.err(target, detail); }
+
+    static info(detail) {
+        console.log(`  ${this.stamp()} ${this.GREY}·${this.RESET} ${this.WHITE}${detail}${this.RESET}`);
+    }
+    static notice(detail) { this.info(detail); }
+
+    static rule() {
+        console.log(`  ${this.GREY}${this.RULE}${this.RESET}`);
+    }
+    static separator() { this.rule(); }
 
     static clear() {
         process.stdout.write("\x1b[2J\x1b[3J\x1b[H");
     }
 
-    static clock() {
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, '0');
-        return `${this.C.slate}${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}${this.C.reset}`;
-    }
-
-    static header() {
+    static banner() {
         this.clear();
         console.log();
-        console.log(`  ${this.C.cyan}╭──────────────────────────────────────────────────╮${this.C.reset}`);
-        console.log(`  ${this.C.cyan}│${this.C.reset}  ${this.C.bold}${this.C.light}DISCORD PROFILE BADGE ACCELERATOR${this.C.reset}               ${this.C.cyan}│${this.C.reset}`);
-        console.log(`  ${this.C.cyan}│${this.C.reset}  ${this.C.dim}${this.C.teal}High-speed telemetry pipeline • v2.5${this.C.reset}            ${this.C.cyan}│${this.C.reset}`);
-        console.log(`  ${this.C.cyan}╰──────────────────────────────────────────────────╯${this.C.reset}`);
+        console.log(`  ${this.PINK}spoofer${this.RESET} ${this.GREY}·${this.RESET} ${this.WHITE}discord badges${this.RESET}`);
+        console.log(`    ${this.GREY}by @heegen - discord.gg/remaders${this.RESET}`);
         console.log();
+        this.separator();
     }
-
-    static separator() {
-        console.log(`  ${this.C.slate}──────────────────────────────────────────────────${this.C.reset}`);
-    }
-
-    static notice(message) {
-        console.log(`  ${this.clock()} ${this.C.blue}ℹ${this.C.reset}  ${this.C.light}${message}${this.C.reset}`);
-    }
-
-    static success(label, detail) {
-        console.log(`  ${this.clock()} ${this.C.emerald}✔${this.C.reset}  ${this.C.bold}${label}${this.C.reset} ${this.C.slate}→${this.C.reset} ${this.C.emerald}${detail}${this.C.reset}`);
-    }
-
-    static warning(label, detail) {
-        console.log(`  ${this.clock()} ${this.C.amber}▲${this.C.reset}  ${this.C.bold}${label}${this.C.reset} ${this.C.slate}→${this.C.reset} ${this.C.amber}${detail}${this.C.reset}`);
-    }
-
-    static failure(label, detail) {
-        console.log(`  ${this.clock()} ${this.C.rose}✖${this.C.reset}  ${this.C.bold}${label}${this.C.reset} ${this.C.slate}→${this.C.reset} ${this.C.rose}${detail}${this.C.reset}`);
-    }
-
-    static progress(current, total, detail) {
-        const ratio = total > 0 ? current / total : 0;
-        const percent = Math.min(100, Math.round(ratio * 100));
-        const barLength = 16;
-        const filled = Math.round(barLength * ratio);
-        const bar = `${this.C.teal}${'━'.repeat(filled)}${this.C.slate}${'━'.repeat(barLength - filled)}${this.C.reset}`;
-        console.log(`  ${this.clock()} ${this.C.cyan}⟳${this.C.reset}  [${bar}] ${percent}% ${this.C.slate}::${this.C.reset} ${this.C.light}${detail}${this.C.reset}`);
-    }
+    static header() { this.banner(); }
 }
 
 class SessionStore {
@@ -157,7 +169,7 @@ class SessionStore {
                 fs.writeFileSync(this.filePath, data, 'utf8');
                 if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
             } catch (fallbackErr) {
-                Terminal.warning("storage", `failed to save state: ${fallbackErr.message}`);
+                Terminal.warn("storage", `failed to save state: ${fallbackErr.message}`);
             }
         }
     }
@@ -617,104 +629,203 @@ class Orchestrator {
         this.reader = readline.createInterface({ input, output });
     }
 
+    parseCountInput(rawValue, fallbackValue, maxValue) {
+        if (!rawValue || rawValue.trim().toLowerCase() === 'all') {
+            return Math.min(fallbackValue, maxValue);
+        }
+
+        const parsed = parseInt(rawValue, 10);
+        if (isNaN(parsed) || parsed <= 0) {
+            throw new Error('invalid count');
+        }
+
+        return Math.min(parsed, maxValue);
+    }
+
+    parseHoursInput(rawValue, fallbackValue) {
+        if (!rawValue) {
+            return fallbackValue;
+        }
+
+        const parsed = parseFloat(rawValue);
+        if (isNaN(parsed) || parsed <= 0) {
+            throw new Error('invalid hours');
+        }
+
+        return parsed;
+    }
+
+    async promptCountSelection(promptLabel, fallbackValue, limit) {
+        const rawValue = await this.prompt(promptLabel);
+        try {
+            return this.parseCountInput(rawValue, fallbackValue, limit);
+        } catch (err) {
+            Terminal.err('input', err.message);
+            await wait(1200);
+            return null;
+        }
+    }
+
+    async promptHoursSelection(promptLabel, fallbackValue) {
+        const rawValue = await this.prompt(promptLabel);
+        try {
+            return this.parseHoursInput(rawValue, fallbackValue);
+        } catch (err) {
+            Terminal.err('input', err.message);
+            await wait(1200);
+            return null;
+        }
+    }
+
     async prompt(query) {
         return (await this.reader.question(query)).trim();
     }
 
+    async promptToken() {
+        Terminal.info("paste your discord account token");
+        const entered = await this.prompt(`  ${Terminal.GREY}token:${Terminal.RESET} `);
+        if (entered) {
+            this.store.set('token', entered);
+            Terminal.ok("token", "saved");
+            await wait(1000);
+        }
+    }
+
+    async promptCookie() {
+        Terminal.info("paste your cf_clearance cookie header");
+        const entered = await this.prompt(`  ${Terminal.GREY}cookie:${Terminal.RESET} `);
+        if (entered) {
+            this.store.set('cookie', entered);
+            Terminal.ok("cookie", "saved");
+            await wait(1000);
+        }
+    }
+
     async run() {
-        Terminal.header();
-        await wait(300);
+        Terminal.banner();
+        await wait(600);
+        console.log();
 
         if (!this.store.get('joined_discord')) {
-            Terminal.notice("opening server link in your browser...");
+            Terminal.info("opening server link in your browser...");
             launchUrl(CONFIG.endpoints.communityUrl);
             this.store.set('joined_discord', true);
+            await wait(500);
         }
 
         if (!this.store.get('token')) {
-            Terminal.notice("enter your discord account token");
-            const token = await this.prompt(`  ${Terminal.C.slate}token:${Terminal.C.reset} `);
-            if (!token) {
-                Terminal.failure("token", "authentication token is mandatory");
-                return;
-            }
-            this.store.set('token', token);
-            Terminal.success("token", "saved to storage");
-            await wait(500);
+            await this.promptToken();
+        } else {
+            Terminal.ok("auth", "token loaded");
+            await wait(400);
         }
-
-        if (!this.store.get('cookie')) {
-            Terminal.header();
-            Terminal.notice("enter your cf_clearance cookie value");
-            const cookie = await this.prompt(`  ${Terminal.C.slate}cookie:${Terminal.C.reset} `);
-            if (!cookie) {
-                Terminal.failure("cookie", "cf_clearance cookie is mandatory");
-                return;
-            }
-            this.store.set('cookie', cookie);
-            Terminal.success("cookie", "saved to storage");
-            await wait(500);
-        }
-
-        Terminal.notice("loading detectable games catalog...");
-        this.catalog = await CatalogProvider.fetchOrCache();
-        if (!this.catalog.length) {
-            Terminal.failure("catalog", "could not retrieve game definitions");
+        if (!this.store.get('token')) {
+            Terminal.err("token", "required to run");
             return;
         }
-        Terminal.success("catalog", `${this.catalog.length} games ready`);
 
-        if (!this.store.get('fingerprint')) {
-            Terminal.warning("fingerprint", "hardware signature missing (recommended for games counter)");
-        }
-
-        Terminal.notice("connecting telemetry session...");
+        Terminal.info("validating auth...");
         this.transmission = new TelemetryTransmission(this.store);
         try {
             await this.transmission.initialize();
-            Terminal.success("session", "ready for telemetry dispatch");
-            await wait(400);
+            Terminal.ok("auth", "ready");
+            await wait(500);
         } catch (err) {
-            Terminal.failure("session", err.message);
+            Terminal.err("token", err.message);
+            this.store.set('token', '');
             return;
         }
 
+        if (!this.store.get('cookie')) {
+            Terminal.banner();
+            await this.promptCookie();
+        } else {
+            Terminal.ok("auth", "cookie loaded");
+            await wait(400);
+        }
+        if (!this.store.get('cookie')) {
+            Terminal.err("cookie", "required to run");
+            return;
+        }
+
+        Terminal.banner();
+        console.log();
+        Terminal.info("loading games...");
+        await wait(300);
+        this.catalog = await CatalogProvider.fetchOrCache();
+        if (!this.catalog.length) {
+            Terminal.err("games", "couldn't load the game list");
+            return;
+        }
+        Terminal.ok("games", `${Terminal.ORANGE}${this.catalog.length}${Terminal.WHITE} loaded`);
+        await wait(400);
+
+        if (!this.store.get('fingerprint')) {
+            console.log();
+            Terminal.warn("fingerprint", "not set · script may not credit the badges");
+            await wait(500);
+        }
+
+        console.log();
         await this.mainLoop();
     }
 
     async mainLoop() {
         while (true) {
-            Terminal.header();
+            Terminal.clear();
+            Terminal.banner();
+            console.log();
 
             const claimedGames = this.store.get('total_games_claimed', 0);
             const claimedHours = Math.round(Number(this.store.get('total_hours_claimed', 0)));
-            console.log(`  ${Terminal.C.bold}Profile Telemetry Stats:${Terminal.C.reset}`);
-            console.log(`    ${Terminal.C.teal}•${Terminal.C.reset} Available Titles : ${Terminal.C.bold}${this.catalog.length}${Terminal.C.reset}`);
-            console.log(`    ${Terminal.C.teal}•${Terminal.C.reset} Boosted Titles   : ${Terminal.C.bold}${claimedGames}${Terminal.C.reset}`);
-            console.log(`    ${Terminal.C.teal}•${Terminal.C.reset} Boosted Playtime : ${Terminal.C.bold}+${claimedHours.toLocaleString()} hours${Terminal.C.reset}`);
-            Terminal.separator();
-            console.log(`  ${Terminal.C.cyan}[1]${Terminal.C.reset} Boost Games-Played Badge     ${Terminal.C.slate}(inject quick launch sessions)${Terminal.C.reset}`);
-            console.log(`  ${Terminal.C.cyan}[2]${Terminal.C.reset} Boost Playtime-Hours Badge    ${Terminal.C.slate}(inject accumulated hours)${Terminal.C.reset}`);
-            console.log(`  ${Terminal.C.cyan}[3]${Terminal.C.reset} Update Credentials & Cookie   ${Terminal.C.slate}(refresh authentication)${Terminal.C.reset}`);
-            console.log(`  ${Terminal.C.cyan}[4]${Terminal.C.reset} Calibrate Hardware Signature  ${Terminal.C.slate}(bind authentic PE hash)${Terminal.C.reset}`);
-            console.log(`  ${Terminal.C.cyan}[5]${Terminal.C.reset} Exit`);
-            Terminal.separator();
 
-            const choice = await this.prompt(`  ${Terminal.C.cyan}›${Terminal.C.reset} `);
+            Terminal.info(`loaded ${Terminal.PINK}${this.catalog.length}${Terminal.WHITE} games`);
+            Terminal.info(`claimed ${Terminal.PINK}${claimedGames}${Terminal.WHITE} games · ${Terminal.PINK}${claimedHours.toLocaleString()}h${Terminal.WHITE} total`);
+
+            let accountName = '—';
+            try {
+                const r = await fetch('https://discord.com/api/v9/users/@me', {
+                    headers: { 'Authorization': this.store.get('token') },
+                    signal: AbortSignal.timeout(5000),
+                });
+                if (r.ok) {
+                    const d = await r.json();
+                    accountName = d.global_name || d.username || '—';
+                }
+            } catch {}
+            const hasFp = !!this.store.get('fingerprint');
+            const hasCk = !!this.store.get('cookie');
+            Terminal.info(`account     ${Terminal.PINK}${accountName}${Terminal.RESET}`);
+            Terminal.info(`fingerprint ${hasFp ? `${Terminal.GREEN}set` : `${Terminal.RED}not set`}${Terminal.RESET}`);
+            Terminal.info(`cookie      ${hasCk ? `${Terminal.GREEN}set` : `${Terminal.RED}not set`}${Terminal.RESET}`);
+            Terminal.rule();
+            Terminal.info(`${Terminal.PINK}1${Terminal.RESET} · boost games played badge`);
+            Terminal.info(`${Terminal.PINK}2${Terminal.RESET} · boost playtime hours badge`);
+            Terminal.info(`${Terminal.PINK}3${Terminal.RESET} · refresh auth`);
+            Terminal.info(`${Terminal.PINK}4${Terminal.RESET} · set fingerprint`);
+            Terminal.info(`${Terminal.PINK}5${Terminal.RESET} · exit`);
+            Terminal.rule();
+
+            const choice = await this.prompt(`  ${Terminal.PINK}›${Terminal.RESET} `);
             console.log();
 
-            if (choice === '1') {
-                await this.actionBoostGames();
-            } else if (choice === '2') {
-                await this.actionBoostHours();
-            } else if (choice === '3') {
-                await this.actionUpdateCredentials();
-            } else if (choice === '4') {
-                await this.actionConfigureSignature();
-            } else if (choice === '5' || !choice) {
+            const actions = {
+                '1': () => this.actionBoostGames(),
+                '2': () => this.actionBoostHours(),
+                '3': () => this.actionUpdateCredentials(),
+                '4': () => this.actionConfigureSignature(),
+                '5': () => { throw new Error('__EXIT__'); },
+            };
+
+            if (choice === '5' || !choice) {
                 break;
+            }
+
+            const action = actions[choice];
+            if (action) {
+                await action();
             } else {
-                Terminal.warning("input", "unknown option selected");
+                Terminal.warn("input", "invalid option");
                 await wait(800);
             }
         }
@@ -745,6 +856,7 @@ class Orchestrator {
         const total = games.length;
         const batchSize = CONFIG.network.batchSize;
         let successful = 0;
+        let batchNo = 1;
 
         for (let i = 0; i < total; i += batchSize) {
             const chunk = games.slice(i, i + batchSize);
@@ -761,27 +873,30 @@ class Orchestrator {
 
                 if (status === 204) {
                     successful += chunk.length;
-                    Terminal.progress(successful, total, `${successful}/${total} games transmitted`);
+                    this.store.recordCompleted(chunk.length, chunk.length * hoursMultiplier);
+                    Terminal.sent(`batch ${batchNo}`, `${successful}/${total} games`);
                     batchSuccess = true;
                     break;
                 } else if (status === 429) {
                     const waitSec = Math.max(retryAfter, 2.0);
-                    Terminal.warning("rate-limit", `HTTP 429 hit · cooling down for ${waitSec.toFixed(1)}s (retries left: ${maxRetries - 1})...`);
+                    Terminal.warn(`batch ${batchNo}`, `[429] rate limit · cooling down ${waitSec.toFixed(1)}s`);
                     await wait(Math.round(waitSec * 1000));
                     maxRetries--;
                 } else if (status === 401 || status === 403) {
-                    Terminal.failure("auth", `rejected (HTTP ${status}) · please update your cf_clearance cookie via option 3`);
+                    Terminal.err(`batch ${batchNo}`, `[${status}] auth rejected · refresh (option 3) with a fresh cookie`);
                     return;
                 } else {
-                    Terminal.warning("telemetry", `unexpected response HTTP ${status || 'network error'} (retries left: ${maxRetries - 1})`);
+                    Terminal.warn(`batch ${batchNo}`, `[${status || 'error'}] retrying...`);
                     await wait(1500);
                     maxRetries--;
                 }
             }
 
             if (!batchSuccess) {
-                Terminal.failure("batch", `failed to transmit batch of ${chunk.length} games after retries`);
+                Terminal.err(`batch ${batchNo}`, `failed to transmit batch after retries`);
             }
+
+            batchNo++;
 
             if (i + batchSize < total) {
                 await wait(CONFIG.network.throttleMs);
@@ -789,98 +904,106 @@ class Orchestrator {
         }
 
         if (successful > 0) {
-            this.store.recordCompleted(successful, successful * hoursMultiplier);
-            Terminal.success("complete", `${successful} games successfully registered on your Discord badge!`);
+            console.log();
+            Terminal.ok("complete", `${successful}/${total} games · ${Math.round(successful * hoursMultiplier).toLocaleString()}h claimed`);
         }
 
-        Terminal.separator();
-        await this.prompt(`  ${Terminal.C.cyan}›${Terminal.C.reset} press enter to continue`);
+        Terminal.rule();
+        await this.prompt(`  ${Terminal.ORANGE}›${Terminal.RESET} press enter to continue `);
+        Terminal.rule();
     }
 
     async actionBoostGames() {
-        Terminal.notice("configure games-played badge booster");
-        const countInput = await this.prompt(`  ${Terminal.C.slate}how many titles to boost? [all / ${this.catalog.length}]:${Terminal.C.reset} `);
-        let targetCount = this.catalog.length;
-        if (countInput) {
-            const parsed = parseInt(countInput, 10);
-            if (isNaN(parsed) || parsed <= 0) {
-                Terminal.failure("input", "game count must be a positive number");
-                await wait(1200);
-                return;
-            }
-            targetCount = Math.min(parsed, this.catalog.length);
+        Terminal.info(`loaded ${Terminal.GREEN}${this.catalog.length}${Terminal.WHITE} games available`);
+        const targetCount = await this.promptCountSelection(
+            `  ${Terminal.GREY}how many games? [all]:${Terminal.RESET} `,
+            this.catalog.length,
+            this.catalog.length,
+        );
+
+        if (targetCount === null) {
+            return;
         }
 
         const selectedGames = this.selectGameSlice(targetCount);
         if (!selectedGames.length) {
-            Terminal.failure("games", "no titles available");
+            Terminal.err("games", "none selected");
             await wait(1000);
             return;
         }
 
-        Terminal.separator();
-        Terminal.notice(`dispatching telemetry for ${selectedGames.length} titles (1 min session each)...`);
+        console.log();
+        Terminal.info(
+            `claiming ${Terminal.ORANGE}1m${Terminal.WHITE} on ` +
+            `${Terminal.ORANGE}${selectedGames.length}${Terminal.WHITE} games ` +
+            `${Terminal.GREY}·${Terminal.WHITE} quick launch`
+        );
+        Terminal.rule();
         await this.dispatchQueue(selectedGames, 60 * 1000, 1 / 60);
     }
 
     async actionBoostHours() {
-        Terminal.notice("configure playtime hours booster");
-        const hoursInput = await this.prompt(`  ${Terminal.C.slate}playtime hours per title? [50]:${Terminal.C.reset} `);
-        if (hoursInput) {
-            const parsed = parseFloat(hoursInput);
-            if (isNaN(parsed) || parsed <= 0) {
-                Terminal.failure("input", "hours must be a positive number");
-                await wait(1200);
-                return;
-            }
-        }
-        const hours = hoursInput && !isNaN(parseFloat(hoursInput)) && parseFloat(hoursInput) > 0
-            ? parseFloat(hoursInput)
-            : 50.0;
+        Terminal.info(`loaded ${Terminal.GREEN}${this.catalog.length}${Terminal.WHITE} games available`);
+        const count = await this.promptCountSelection(
+            `  ${Terminal.GREY}how many games? [all]:${Terminal.RESET} `,
+            this.catalog.length,
+            this.catalog.length,
+        );
 
-        const countInput = await this.prompt(`  ${Terminal.C.slate}across how many titles? [10]:${Terminal.C.reset} `);
-        if (countInput) {
-            const parsed = parseInt(countInput, 10);
-            if (isNaN(parsed) || parsed <= 0) {
-                Terminal.failure("input", "number of titles must be a positive number");
-                await wait(1200);
-                return;
-            }
+        if (count === null) {
+            return;
         }
-        const count = countInput && !isNaN(parseInt(countInput, 10)) && parseInt(countInput, 10) > 0
-            ? Math.min(parseInt(countInput, 10), this.catalog.length)
-            : Math.min(10, this.catalog.length);
+
+        const hours = await this.promptHoursSelection(
+            `  ${Terminal.GREY}hours per game? [50]:${Terminal.RESET} `,
+            50.0,
+        );
+
+        if (hours === null) {
+            return;
+        }
 
         const selectedGames = this.selectGameSlice(count);
         if (!selectedGames.length) {
-            Terminal.failure("games", "no titles available");
+            Terminal.err("games", "none selected");
             await wait(1000);
             return;
         }
 
         const totalHours = Math.round(selectedGames.length * hours);
-        Terminal.separator();
-        Terminal.notice(`injecting +${totalHours.toLocaleString()}h across ${selectedGames.length} titles...`);
+        console.log();
+        Terminal.info(
+            `claiming ${Terminal.ORANGE}${hours}h${Terminal.WHITE} on ` +
+            `${Terminal.ORANGE}${selectedGames.length}${Terminal.WHITE} games ` +
+            `${Terminal.GREY}·${Terminal.WHITE} ${totalHours.toLocaleString()}h total`
+        );
+        Terminal.rule();
         const durationMs = Math.round(hours * 3600 * 1000);
         await this.dispatchQueue(selectedGames, durationMs, hours);
     }
 
     async actionUpdateCredentials() {
-        Terminal.notice("authentication manager");
-        const newCookie = await this.prompt(`  ${Terminal.C.slate}paste fresh cf_clearance cookie (or enter to keep current):${Terminal.C.reset} `);
-        if (newCookie) {
-            this.store.set('cookie', newCookie);
-            Terminal.success("cookie", "updated");
+        Terminal.info("update cookie? [y/n]");
+        const choice = (await this.prompt(`  ${Terminal.GREY}›${Terminal.RESET} `)).toLowerCase();
+        if (choice === 'y' || choice === 'yes') {
+            Terminal.info("paste fresh cf_clearance cookie");
+            const newCookie = await this.prompt(`  ${Terminal.GREY}cookie:${Terminal.RESET} `);
+            if (newCookie) {
+                this.store.set('cookie', newCookie);
+                Terminal.ok("cookie", "updated");
+            } else {
+                Terminal.info("cookie unchanged");
+            }
         }
 
-        Terminal.notice("refreshing telemetry token...");
+        Terminal.info("refreshing analytics token...");
         try {
             this.store.set('fetched_at', 0);
             this.transmission = new TelemetryTransmission(this.store);
             await this.transmission.initialize();
-            Terminal.success("auth", "session verified and refreshed");
+            Terminal.ok("auth", "refreshed");
         } catch (err) {
-            Terminal.failure("auth", err.message);
+            Terminal.err("auth", err.message);
         }
         await wait(1200);
     }
@@ -888,32 +1011,48 @@ class Orchestrator {
     async actionConfigureSignature() {
         const snowflake = parseSnowflake(this.store.get('token'));
         if (!snowflake) {
-            Terminal.failure("signature", "valid account token is required first");
+            Terminal.err("fingerprint", "no valid token · set one first");
             await wait(1200);
             return;
         }
 
-        Terminal.notice(`account user id: ${Terminal.C.cyan}${snowflake}${Terminal.C.reset}`);
-        Terminal.notice("enter path to any 64-bit game .exe (or active process PID)");
-        const target = (await this.prompt(`  ${Terminal.C.slate}path or PID:${Terminal.C.reset} `)).replace(/^"|"$/g, '');
-        if (!target) return;
+        Terminal.info("generate an executable_fingerprint tied to this account + machine");
+        let displayName = snowflake;
+        try {
+            const res = await fetch("https://discord.com/api/v9/users/@me", {
+                headers: { "Authorization": this.store.get('token') },
+                signal: AbortSignal.timeout(6000),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                displayName = data.global_name || data.username || snowflake;
+            }
+        } catch {}
+        Terminal.info(`account: ${Terminal.PINK}${displayName}${Terminal.RESET}`);
+        Terminal.info("point it at a game's .exe (or a running game's pid)");
+        const target = (await this.prompt(`  ${Terminal.GREY}exe path or pid:${Terminal.RESET} `)).replace(/^"|"$/g, '').trim();
+        if (!target) {
+            Terminal.info("cancelled");
+            await wait(1000);
+            return;
+        }
 
         const pid = /^\d+$/.test(target) ? parseInt(target, 10) : 0;
         const exePath = pid ? '' : target;
 
         if (exePath && !fs.existsSync(exePath)) {
-            Terminal.failure("signature", `file not found: ${exePath}`);
+            Terminal.err("fingerprint", `file not found: ${exePath}`);
             await wait(1200);
             return;
         }
 
-        Terminal.notice("computing authentic PE signature...");
+        Terminal.info("generating...");
         try {
             const sig = WindowsPEIntegrity.generate(snowflake, exePath, pid);
             this.store.set('fingerprint', sig);
-            Terminal.success("signature", `generated (${sig.length} bytes) and saved`);
+            Terminal.ok("fingerprint", `set (${sig.length} chars) · saved to state`);
         } catch (err) {
-            Terminal.failure("signature", err.message);
+            Terminal.err("fingerprint", err.message);
         }
         await wait(1500);
     }
@@ -926,7 +1065,7 @@ class Orchestrator {
 async function start() {
     process.on("SIGINT", () => {
         console.log();
-        Terminal.warning("process", "operation cancelled");
+        Terminal.warn("exit", "interrupted");
         process.exit(0);
     });
 
@@ -934,7 +1073,7 @@ async function start() {
     try {
         await app.run();
     } catch (err) {
-        Terminal.failure("error", err.message || err);
+        Terminal.err("error", err.message || err);
     } finally {
         app.destroy();
     }
