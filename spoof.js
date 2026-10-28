@@ -469,9 +469,10 @@ class TelemetryTransmission {
         this.store.set('fetched_at', Math.floor(Date.now() / 1000));
     }
 
-    createSessionPayload(game, durationMs) {
+    createSessionPayload(game, durationMs, sessionIndex = 0) {
+        const SESSION_GAP_MS = 2000;
         const sessionId = crypto.randomUUID();
-        const now = Date.now();
+        const now = Date.now() - sessionIndex * SESSION_GAP_MS;
         const startTime = durationMs > now ? now : now - durationMs;
         const jitter = Math.floor(Math.random() * (680 - 120 + 1)) + 120;
         const launchTime = Math.min(startTime + jitter, now);
@@ -857,12 +858,14 @@ class Orchestrator {
         const batchSize = CONFIG.network.batchSize;
         let successful = 0;
         let batchNo = 1;
+        let globalIndex = 0;
 
         for (let i = 0; i < total; i += batchSize) {
             const chunk = games.slice(i, i + batchSize);
             const events = [];
             for (const item of chunk) {
-                events.push(...this.transmission.createSessionPayload(item, durationMs));
+                events.push(...this.transmission.createSessionPayload(item, durationMs, globalIndex));
+                globalIndex++;
             }
 
             let maxRetries = 3;
